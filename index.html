@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quà Bí Mật 💖</title>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+height:100vh;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle at top,#1a001f,#000);
+}
+
+/* SCREEN SYSTEM */
+.screen{
+display:none;
+width:100%;
+height:100%;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+position:absolute;
+}
+
+.active{display:flex;}
+
+/* LOGIN BOX */
+.box{
+width:420px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(20px);
+padding:40px;
+border-radius:25px;
+text-align:center;
+box-shadow:0 0 50px rgba(255,105,180,.2);
+border:1px solid rgba(255,255,255,.1);
+z-index:10;
+}
+
+h1{
+color:#ff6fa8;
+margin-bottom:10px;
+}
+
+p{
+color:#ccc;
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+outline:none;
+font-size:16px;
+margin-top:10px;
+}
+
+button{
+margin-top:20px;
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+background:linear-gradient(135deg,#ff4d9d,#ff85c2);
+color:white;
+font-size:18px;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+/* PETALS */
+.petal{
+position:absolute;
+top:-50px;
+font-size:20px;
+animation:fall linear infinite;
+opacity:.7;
+}
+
+@keyframes fall{
+0%{transform:translateY(-50px) rotate(0deg);}
+100%{transform:translateY(110vh) rotate(360deg);}
+}
+
+/* LETTER */
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:0;
+}
+
+.container{
+width:90%;
+max-width:900px;
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(25px);
+padding:40px;
+border-radius:30px;
+box-shadow:0 0 80px rgba(255,100,180,.25);
+border:1px solid rgba(255,255,255,.1);
+z-index:2;
+}
+
+#title{
+text-align:center;
+font-size:42px;
+margin-bottom:20px;
+color:#ff6fa8;
+text-shadow:0 0 20px rgba(255,105,180,.6);
+}
+
+#letter{
+font-size:22px;
+line-height:2;
+color:white;
+white-space:pre-wrap;
+min-height:300px;
+}
+
+.cursor{
+animation:blink .7s infinite;
+}
+
+@keyframes blink{50%{opacity:0;}}
+
+</style>
+</head>
+
+<body>
+
+<!-- SCREEN 1 -->
+<div class="screen active" id="screen1">
+<div class="box">
+<h1>💖 Quà Bí Mật</h1>
+<p>Nhập mật khẩu để mở</p>
+<input id="password" type="password" placeholder="Mật khẩu...">
+<button onclick="checkPassword()">Mở quà 🎁</button>
+</div>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen" id="screen2">
+<div class="box">
+<h1>🌸 Tớ gọi cậu là gì?</h1>
+<p>Nhập tên của cậu</p>
+<input id="name" type="text" placeholder="Ví dụ: Bé Yêu">
+<button onclick="goLetter()">Tiếp tục 💌</button>
+</div>
+</div>
+
+<!-- SCREEN 3 -->
+<div class="screen" id="screen3">
+<canvas id="bg"></canvas>
+
+<div class="container">
+<h1 id="title"></h1>
+<div id="letter"></div>
+</div>
+</div>
+
+<script>
+
+/* FLOW */
+function show(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+function checkPassword(){
+const p = document.getElementById("password").value;
+if(p==="1702") show("screen2");
+else alert("Sai mật khẩu 💔");
+}
+
+function goLetter(){
+const name = document.getElementById("name").value.trim();
+if(!name) return alert("Nhập tên đi 🌸");
+start(name);
+show("screen3");
+}
+
+/* LETTER + GRAPHICS */
+function start(name){
+
+document.getElementById("title").innerText = `💖 Gửi ${name} 💖`;
+
+const text = `
+Chào ${name} 🌸
+
+Hôm nay là 1/6 - Quốc tế Thiếu Nhi 💖
+
+Tớ không có quà gì lớn,
+chỉ có một lời chúc nhỏ dành cho cậu.
+
+Chúc cậu luôn vui vẻ,
+cười thật nhiều,
+và luôn được yêu thương ✨
+
+Cảm ơn vì đã xuất hiện trong cuộc sống này 💗
+`;
+
+let i=0;
+const box=document.getElementById("letter");
+
+function type(){
+if(i<text.length){
+box.innerHTML=text.slice(0,i)+'<span class="cursor">|</span>';
+i++;
+setTimeout(type,25);
+}else box.innerHTML=text;
+}
+type();
+
+/* ===== THREE.JS GALAXY UPGRADE ===== */
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+75,window.innerWidth/window.innerHeight,0.1,2000
+);
+
+camera.position.z = 500;
+
+const renderer = new THREE.WebGLRenderer({
+canvas:document.getElementById("bg"),
+alpha:true,
+antialias:true
+});
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+scene.fog = new THREE.FogExp2(0x000000,0.0012);
+
+const count=8000;
+const geo=new THREE.BufferGeometry();
+const pos=[];
+
+for(let i=0;i<count;i++){
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+}
+
+geo.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+
+const mat=new THREE.PointsMaterial({
+size:2.2,
+color:0xff6fa8,
+transparent:true,
+opacity:0.9,
+blending:THREE.AdditiveBlending,
+depthWrite:false
+});
+
+const stars=new THREE.Points(geo,mat);
+scene.add(stars);
+
+/* mouse effect */
+let mx=0,my=0;
+
+document.addEventListener("mousemove",(e)=>{
+mx=(e.clientX-window.innerWidth/2)*0.0008;
+my=(e.clientY-window.innerHeight/2)*0.0008;
+});
+
+/* animate */
+function animate(){
+requestAnimationFrame(animate);
+
+stars.rotation.y += 0.0007;
+stars.rotation.x += 0.0003;
+
+camera.position.x += (mx*100-camera.position.x)*0.03;
+camera.position.y += (-my*100-camera.position.y)*0.03;
+
+camera.lookAt(scene.position);
+
+renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener("resize",()=>{
+camera.aspect=window.innerWidth/window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+}
+
+/* petals */
+function petal(){
+const p=document.createElement("div");
+p.className="petal";
+p.innerHTML="🌸";
+p.style.left=Math.random()*100+"vw";
+p.style.animationDuration=(Math.random()*5+5)+"s";
+document.body.appendChild(p);
+setTimeout(()=>p.remove(),10000);
+}
+setInterval(petal,250);
+
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quà Bí Mật 💖</title>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+height:100vh;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle at top,#1a001f,#000);
+}
+
+/* SCREEN SYSTEM */
+.screen{
+display:none;
+width:100%;
+height:100%;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+position:absolute;
+}
+
+.active{display:flex;}
+
+/* LOGIN BOX */
+.box{
+width:420px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(20px);
+padding:40px;
+border-radius:25px;
+text-align:center;
+box-shadow:0 0 50px rgba(255,105,180,.2);
+border:1px solid rgba(255,255,255,.1);
+z-index:10;
+}
+
+h1{
+color:#ff6fa8;
+margin-bottom:10px;
+}
+
+p{
+color:#ccc;
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+outline:none;
+font-size:16px;
+margin-top:10px;
+}
+
+button{
+margin-top:20px;
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+background:linear-gradient(135deg,#ff4d9d,#ff85c2);
+color:white;
+font-size:18px;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+/* PETALS */
+.petal{
+position:absolute;
+top:-50px;
+font-size:20px;
+animation:fall linear infinite;
+opacity:.7;
+}
+
+@keyframes fall{
+0%{transform:translateY(-50px) rotate(0deg);}
+100%{transform:translateY(110vh) rotate(360deg);}
+}
+
+/* LETTER */
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:0;
+}
+
+.container{
+width:90%;
+max-width:900px;
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(25px);
+padding:40px;
+border-radius:30px;
+box-shadow:0 0 80px rgba(255,100,180,.25);
+border:1px solid rgba(255,255,255,.1);
+z-index:2;
+}
+
+#title{
+text-align:center;
+font-size:42px;
+margin-bottom:20px;
+color:#ff6fa8;
+text-shadow:0 0 20px rgba(255,105,180,.6);
+}
+
+#letter{
+font-size:22px;
+line-height:2;
+color:white;
+white-space:pre-wrap;
+min-height:300px;
+}
+
+.cursor{
+animation:blink .7s infinite;
+}
+
+@keyframes blink{50%{opacity:0;}}
+
+</style>
+</head>
+
+<body>
+
+<!-- SCREEN 1 -->
+<div class="screen active" id="screen1">
+<div class="box">
+<h1>💖 Quà Bí Mật</h1>
+<p>Nhập mật khẩu để mở</p>
+<input id="password" type="password" placeholder="Mật khẩu...">
+<button onclick="checkPassword()">Mở quà 🎁</button>
+</div>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen" id="screen2">
+<div class="box">
+<h1>🌸 Tớ gọi cậu là gì?</h1>
+<p>Nhập tên của cậu</p>
+<input id="name" type="text" placeholder="Ví dụ: Bé Yêu">
+<button onclick="goLetter()">Tiếp tục 💌</button>
+</div>
+</div>
+
+<!-- SCREEN 3 -->
+<div class="screen" id="screen3">
+<canvas id="bg"></canvas>
+
+<div class="container">
+<h1 id="title"></h1>
+<div id="letter"></div>
+</div>
+</div>
+
+<script>
+
+/* FLOW */
+function show(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+function checkPassword(){
+const p = document.getElementById("password").value;
+if(p==="1702") show("screen2");
+else alert("Sai mật khẩu 💔");
+}
+
+function goLetter(){
+const name = document.getElementById("name").value.trim();
+if(!name) return alert("Nhập tên đi 🌸");
+start(name);
+show("screen3");
+}
+
+/* LETTER + GRAPHICS */
+function start(name){
+
+document.getElementById("title").innerText = `💖 Gửi ${name} 💖`;
+
+const text = `
+Chào ${name} 🌸
+
+Hôm nay là 1/6 - Quốc tế Thiếu Nhi 💖
+
+Tớ không có quà gì lớn,
+chỉ có một lời chúc nhỏ dành cho cậu.
+
+Chúc cậu luôn vui vẻ,
+cười thật nhiều,
+và luôn được yêu thương ✨
+
+Cảm ơn vì đã xuất hiện trong cuộc sống này 💗
+`;
+
+let i=0;
+const box=document.getElementById("letter");
+
+function type(){
+if(i<text.length){
+box.innerHTML=text.slice(0,i)+'<span class="cursor">|</span>';
+i++;
+setTimeout(type,25);
+}else box.innerHTML=text;
+}
+type();
+
+/* ===== THREE.JS GALAXY UPGRADE ===== */
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+75,window.innerWidth/window.innerHeight,0.1,2000
+);
+
+camera.position.z = 500;
+
+const renderer = new THREE.WebGLRenderer({
+canvas:document.getElementById("bg"),
+alpha:true,
+antialias:true
+});
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+scene.fog = new THREE.FogExp2(0x000000,0.0012);
+
+const count=8000;
+const geo=new THREE.BufferGeometry();
+const pos=[];
+
+for(let i=0;i<count;i++){
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+}
+
+geo.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+
+const mat=new THREE.PointsMaterial({
+size:2.2,
+color:0xff6fa8,
+transparent:true,
+opacity:0.9,
+blending:THREE.AdditiveBlending,
+depthWrite:false
+});
+
+const stars=new THREE.Points(geo,mat);
+scene.add(stars);
+
+/* mouse effect */
+let mx=0,my=0;
+
+document.addEventListener("mousemove",(e)=>{
+mx=(e.clientX-window.innerWidth/2)*0.0008;
+my=(e.clientY-window.innerHeight/2)*0.0008;
+});
+
+/* animate */
+function animate(){
+requestAnimationFrame(animate);
+
+stars.rotation.y += 0.0007;
+stars.rotation.x += 0.0003;
+
+camera.position.x += (mx*100-camera.position.x)*0.03;
+camera.position.y += (-my*100-camera.position.y)*0.03;
+
+camera.lookAt(scene.position);
+
+renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener("resize",()=>{
+camera.aspect=window.innerWidth/window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+}
+
+/* petals */
+function petal(){
+const p=document.createElement("div");
+p.className="petal";
+p.innerHTML="🌸";
+p.style.left=Math.random()*100+"vw";
+p.style.animationDuration=(Math.random()*5+5)+"s";
+document.body.appendChild(p);
+setTimeout(()=>p.remove(),10000);
+}
+setInterval(petal,250);
+
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quà Bí Mật 💖</title>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+height:100vh;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle at top,#1a001f,#000);
+}
+
+/* SCREEN SYSTEM */
+.screen{
+display:none;
+width:100%;
+height:100%;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+position:absolute;
+}
+
+.active{display:flex;}
+
+/* LOGIN BOX */
+.box{
+width:420px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(20px);
+padding:40px;
+border-radius:25px;
+text-align:center;
+box-shadow:0 0 50px rgba(255,105,180,.2);
+border:1px solid rgba(255,255,255,.1);
+z-index:10;
+}
+
+h1{
+color:#ff6fa8;
+margin-bottom:10px;
+}
+
+p{
+color:#ccc;
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+outline:none;
+font-size:16px;
+margin-top:10px;
+}
+
+button{
+margin-top:20px;
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+background:linear-gradient(135deg,#ff4d9d,#ff85c2);
+color:white;
+font-size:18px;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+/* PETALS */
+.petal{
+position:absolute;
+top:-50px;
+font-size:20px;
+animation:fall linear infinite;
+opacity:.7;
+}
+
+@keyframes fall{
+0%{transform:translateY(-50px) rotate(0deg);}
+100%{transform:translateY(110vh) rotate(360deg);}
+}
+
+/* LETTER */
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:0;
+}
+
+.container{
+width:90%;
+max-width:900px;
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(25px);
+padding:40px;
+border-radius:30px;
+box-shadow:0 0 80px rgba(255,100,180,.25);
+border:1px solid rgba(255,255,255,.1);
+z-index:2;
+}
+
+#title{
+text-align:center;
+font-size:42px;
+margin-bottom:20px;
+color:#ff6fa8;
+text-shadow:0 0 20px rgba(255,105,180,.6);
+}
+
+#letter{
+font-size:22px;
+line-height:2;
+color:white;
+white-space:pre-wrap;
+min-height:300px;
+}
+
+.cursor{
+animation:blink .7s infinite;
+}
+
+@keyframes blink{50%{opacity:0;}}
+
+</style>
+</head>
+
+<body>
+
+<!-- SCREEN 1 -->
+<div class="screen active" id="screen1">
+<div class="box">
+<h1>💖 Quà Bí Mật</h1>
+<p>Nhập mật khẩu để mở</p>
+<input id="password" type="password" placeholder="Mật khẩu...">
+<button onclick="checkPassword()">Mở quà 🎁</button>
+</div>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen" id="screen2">
+<div class="box">
+<h1>🌸 Tớ gọi cậu là gì?</h1>
+<p>Nhập tên của cậu</p>
+<input id="name" type="text" placeholder="Ví dụ: Bé Yêu">
+<button onclick="goLetter()">Tiếp tục 💌</button>
+</div>
+</div>
+
+<!-- SCREEN 3 -->
+<div class="screen" id="screen3">
+<canvas id="bg"></canvas>
+
+<div class="container">
+<h1 id="title"></h1>
+<div id="letter"></div>
+</div>
+</div>
+
+<script>
+
+/* FLOW */
+function show(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+function checkPassword(){
+const p = document.getElementById("password").value;
+if(p==="1702") show("screen2");
+else alert("Sai mật khẩu 💔");
+}
+
+function goLetter(){
+const name = document.getElementById("name").value.trim();
+if(!name) return alert("Nhập tên đi 🌸");
+start(name);
+show("screen3");
+}
+
+/* LETTER + GRAPHICS */
+function start(name){
+
+document.getElementById("title").innerText = `💖 Gửi ${name} 💖`;
+
+const text = `
+Chào ${name} 🌸
+
+Hôm nay là 1/6 - Quốc tế Thiếu Nhi 💖
+
+Tớ không có quà gì lớn,
+chỉ có một lời chúc nhỏ dành cho cậu.
+
+Chúc cậu luôn vui vẻ,
+cười thật nhiều,
+và luôn được yêu thương ✨
+
+Cảm ơn vì đã xuất hiện trong cuộc sống này 💗
+`;
+
+let i=0;
+const box=document.getElementById("letter");
+
+function type(){
+if(i<text.length){
+box.innerHTML=text.slice(0,i)+'<span class="cursor">|</span>';
+i++;
+setTimeout(type,25);
+}else box.innerHTML=text;
+}
+type();
+
+/* ===== THREE.JS GALAXY UPGRADE ===== */
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+75,window.innerWidth/window.innerHeight,0.1,2000
+);
+
+camera.position.z = 500;
+
+const renderer = new THREE.WebGLRenderer({
+canvas:document.getElementById("bg"),
+alpha:true,
+antialias:true
+});
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+scene.fog = new THREE.FogExp2(0x000000,0.0012);
+
+const count=8000;
+const geo=new THREE.BufferGeometry();
+const pos=[];
+
+for(let i=0;i<count;i++){
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+}
+
+geo.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+
+const mat=new THREE.PointsMaterial({
+size:2.2,
+color:0xff6fa8,
+transparent:true,
+opacity:0.9,
+blending:THREE.AdditiveBlending,
+depthWrite:false
+});
+
+const stars=new THREE.Points(geo,mat);
+scene.add(stars);
+
+/* mouse effect */
+let mx=0,my=0;
+
+document.addEventListener("mousemove",(e)=>{
+mx=(e.clientX-window.innerWidth/2)*0.0008;
+my=(e.clientY-window.innerHeight/2)*0.0008;
+});
+
+/* animate */
+function animate(){
+requestAnimationFrame(animate);
+
+stars.rotation.y += 0.0007;
+stars.rotation.x += 0.0003;
+
+camera.position.x += (mx*100-camera.position.x)*0.03;
+camera.position.y += (-my*100-camera.position.y)*0.03;
+
+camera.lookAt(scene.position);
+
+renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener("resize",()=>{
+camera.aspect=window.innerWidth/window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+}
+
+/* petals */
+function petal(){
+const p=document.createElement("div");
+p.className="petal";
+p.innerHTML="🌸";
+p.style.left=Math.random()*100+"vw";
+p.style.animationDuration=(Math.random()*5+5)+"s";
+document.body.appendChild(p);
+setTimeout(()=>p.remove(),10000);
+}
+setInterval(petal,250);
+
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quà Bí Mật 💖</title>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+height:100vh;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle at top,#1a001f,#000);
+}
+
+/* SCREEN SYSTEM */
+.screen{
+display:none;
+width:100%;
+height:100%;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+position:absolute;
+}
+
+.active{display:flex;}
+
+/* LOGIN BOX */
+.box{
+width:420px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(20px);
+padding:40px;
+border-radius:25px;
+text-align:center;
+box-shadow:0 0 50px rgba(255,105,180,.2);
+border:1px solid rgba(255,255,255,.1);
+z-index:10;
+}
+
+h1{
+color:#ff6fa8;
+margin-bottom:10px;
+}
+
+p{
+color:#ccc;
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+outline:none;
+font-size:16px;
+margin-top:10px;
+}
+
+button{
+margin-top:20px;
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+background:linear-gradient(135deg,#ff4d9d,#ff85c2);
+color:white;
+font-size:18px;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+/* PETALS */
+.petal{
+position:absolute;
+top:-50px;
+font-size:20px;
+animation:fall linear infinite;
+opacity:.7;
+}
+
+@keyframes fall{
+0%{transform:translateY(-50px) rotate(0deg);}
+100%{transform:translateY(110vh) rotate(360deg);}
+}
+
+/* LETTER */
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:0;
+}
+
+.container{
+width:90%;
+max-width:900px;
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(25px);
+padding:40px;
+border-radius:30px;
+box-shadow:0 0 80px rgba(255,100,180,.25);
+border:1px solid rgba(255,255,255,.1);
+z-index:2;
+}
+
+#title{
+text-align:center;
+font-size:42px;
+margin-bottom:20px;
+color:#ff6fa8;
+text-shadow:0 0 20px rgba(255,105,180,.6);
+}
+
+#letter{
+font-size:22px;
+line-height:2;
+color:white;
+white-space:pre-wrap;
+min-height:300px;
+}
+
+.cursor{
+animation:blink .7s infinite;
+}
+
+@keyframes blink{50%{opacity:0;}}
+
+</style>
+</head>
+
+<body>
+
+<!-- SCREEN 1 -->
+<div class="screen active" id="screen1">
+<div class="box">
+<h1>💖 Quà Bí Mật</h1>
+<p>Nhập mật khẩu để mở</p>
+<input id="password" type="password" placeholder="Mật khẩu...">
+<button onclick="checkPassword()">Mở quà 🎁</button>
+</div>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen" id="screen2">
+<div class="box">
+<h1>🌸 Tớ gọi cậu là gì?</h1>
+<p>Nhập tên của cậu</p>
+<input id="name" type="text" placeholder="Ví dụ: Bé Yêu">
+<button onclick="goLetter()">Tiếp tục 💌</button>
+</div>
+</div>
+
+<!-- SCREEN 3 -->
+<div class="screen" id="screen3">
+<canvas id="bg"></canvas>
+
+<div class="container">
+<h1 id="title"></h1>
+<div id="letter"></div>
+</div>
+</div>
+
+<script>
+
+/* FLOW */
+function show(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+function checkPassword(){
+const p = document.getElementById("password").value;
+if(p==="1702") show("screen2");
+else alert("Sai mật khẩu 💔");
+}
+
+function goLetter(){
+const name = document.getElementById("name").value.trim();
+if(!name) return alert("Nhập tên đi 🌸");
+start(name);
+show("screen3");
+}
+
+/* LETTER + GRAPHICS */
+function start(name){
+
+document.getElementById("title").innerText = `💖 Gửi ${name} 💖`;
+
+const text = `
+Chào ${name} 🌸
+
+Hôm nay là 1/6 - Quốc tế Thiếu Nhi 💖
+
+Tớ không có quà gì lớn,
+chỉ có một lời chúc nhỏ dành cho cậu.
+
+Chúc cậu luôn vui vẻ,
+cười thật nhiều,
+và luôn được yêu thương ✨
+
+Cảm ơn vì đã xuất hiện trong cuộc sống này 💗
+`;
+
+let i=0;
+const box=document.getElementById("letter");
+
+function type(){
+if(i<text.length){
+box.innerHTML=text.slice(0,i)+'<span class="cursor">|</span>';
+i++;
+setTimeout(type,25);
+}else box.innerHTML=text;
+}
+type();
+
+/* ===== THREE.JS GALAXY UPGRADE ===== */
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+75,window.innerWidth/window.innerHeight,0.1,2000
+);
+
+camera.position.z = 500;
+
+const renderer = new THREE.WebGLRenderer({
+canvas:document.getElementById("bg"),
+alpha:true,
+antialias:true
+});
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+scene.fog = new THREE.FogExp2(0x000000,0.0012);
+
+const count=8000;
+const geo=new THREE.BufferGeometry();
+const pos=[];
+
+for(let i=0;i<count;i++){
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+}
+
+geo.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+
+const mat=new THREE.PointsMaterial({
+size:2.2,
+color:0xff6fa8,
+transparent:true,
+opacity:0.9,
+blending:THREE.AdditiveBlending,
+depthWrite:false
+});
+
+const stars=new THREE.Points(geo,mat);
+scene.add(stars);
+
+/* mouse effect */
+let mx=0,my=0;
+
+document.addEventListener("mousemove",(e)=>{
+mx=(e.clientX-window.innerWidth/2)*0.0008;
+my=(e.clientY-window.innerHeight/2)*0.0008;
+});
+
+/* animate */
+function animate(){
+requestAnimationFrame(animate);
+
+stars.rotation.y += 0.0007;
+stars.rotation.x += 0.0003;
+
+camera.position.x += (mx*100-camera.position.x)*0.03;
+camera.position.y += (-my*100-camera.position.y)*0.03;
+
+camera.lookAt(scene.position);
+
+renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener("resize",()=>{
+camera.aspect=window.innerWidth/window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+}
+
+/* petals */
+function petal(){
+const p=document.createElement("div");
+p.className="petal";
+p.innerHTML="🌸";
+p.style.left=Math.random()*100+"vw";
+p.style.animationDuration=(Math.random()*5+5)+"s";
+document.body.appendChild(p);
+setTimeout(()=>p.remove(),10000);
+}
+setInterval(petal,250);
+
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quà Bí Mật 💖</title>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+height:100vh;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle at top,#1a001f,#000);
+}
+
+/* SCREEN SYSTEM */
+.screen{
+display:none;
+width:100%;
+height:100%;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+position:absolute;
+}
+
+.active{display:flex;}
+
+/* LOGIN BOX */
+.box{
+width:420px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(20px);
+padding:40px;
+border-radius:25px;
+text-align:center;
+box-shadow:0 0 50px rgba(255,105,180,.2);
+border:1px solid rgba(255,255,255,.1);
+z-index:10;
+}
+
+h1{
+color:#ff6fa8;
+margin-bottom:10px;
+}
+
+p{
+color:#ccc;
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+outline:none;
+font-size:16px;
+margin-top:10px;
+}
+
+button{
+margin-top:20px;
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+background:linear-gradient(135deg,#ff4d9d,#ff85c2);
+color:white;
+font-size:18px;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+/* PETALS */
+.petal{
+position:absolute;
+top:-50px;
+font-size:20px;
+animation:fall linear infinite;
+opacity:.7;
+}
+
+@keyframes fall{
+0%{transform:translateY(-50px) rotate(0deg);}
+100%{transform:translateY(110vh) rotate(360deg);}
+}
+
+/* LETTER */
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:0;
+}
+
+.container{
+width:90%;
+max-width:900px;
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(25px);
+padding:40px;
+border-radius:30px;
+box-shadow:0 0 80px rgba(255,100,180,.25);
+border:1px solid rgba(255,255,255,.1);
+z-index:2;
+}
+
+#title{
+text-align:center;
+font-size:42px;
+margin-bottom:20px;
+color:#ff6fa8;
+text-shadow:0 0 20px rgba(255,105,180,.6);
+}
+
+#letter{
+font-size:22px;
+line-height:2;
+color:white;
+white-space:pre-wrap;
+min-height:300px;
+}
+
+.cursor{
+animation:blink .7s infinite;
+}
+
+@keyframes blink{50%{opacity:0;}}
+
+</style>
+</head>
+
+<body>
+
+<!-- SCREEN 1 -->
+<div class="screen active" id="screen1">
+<div class="box">
+<h1>💖 Quà Bí Mật</h1>
+<p>Nhập mật khẩu để mở</p>
+<input id="password" type="password" placeholder="Mật khẩu...">
+<button onclick="checkPassword()">Mở quà 🎁</button>
+</div>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen" id="screen2">
+<div class="box">
+<h1>🌸 Tớ gọi cậu là gì?</h1>
+<p>Nhập tên của cậu</p>
+<input id="name" type="text" placeholder="Ví dụ: Bé Yêu">
+<button onclick="goLetter()">Tiếp tục 💌</button>
+</div>
+</div>
+
+<!-- SCREEN 3 -->
+<div class="screen" id="screen3">
+<canvas id="bg"></canvas>
+
+<div class="container">
+<h1 id="title"></h1>
+<div id="letter"></div>
+</div>
+</div>
+
+<script>
+
+/* FLOW */
+function show(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+function checkPassword(){
+const p = document.getElementById("password").value;
+if(p==="1702") show("screen2");
+else alert("Sai mật khẩu 💔");
+}
+
+function goLetter(){
+const name = document.getElementById("name").value.trim();
+if(!name) return alert("Nhập tên đi 🌸");
+start(name);
+show("screen3");
+}
+
+/* LETTER + GRAPHICS */
+function start(name){
+
+document.getElementById("title").innerText = `💖 Gửi ${name} 💖`;
+
+const text = `
+Chào ${name} 🌸
+
+Hôm nay là 1/6 - Quốc tế Thiếu Nhi 💖
+
+Tớ không có quà gì lớn,
+chỉ có một lời chúc nhỏ dành cho cậu.
+
+Chúc cậu luôn vui vẻ,
+cười thật nhiều,
+và luôn được yêu thương ✨
+
+Cảm ơn vì đã xuất hiện trong cuộc sống này 💗
+`;
+
+let i=0;
+const box=document.getElementById("letter");
+
+function type(){
+if(i<text.length){
+box.innerHTML=text.slice(0,i)+'<span class="cursor">|</span>';
+i++;
+setTimeout(type,25);
+}else box.innerHTML=text;
+}
+type();
+
+/* ===== THREE.JS GALAXY UPGRADE ===== */
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+75,window.innerWidth/window.innerHeight,0.1,2000
+);
+
+camera.position.z = 500;
+
+const renderer = new THREE.WebGLRenderer({
+canvas:document.getElementById("bg"),
+alpha:true,
+antialias:true
+});
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+scene.fog = new THREE.FogExp2(0x000000,0.0012);
+
+const count=8000;
+const geo=new THREE.BufferGeometry();
+const pos=[];
+
+for(let i=0;i<count;i++){
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+pos.push((Math.random()-0.5)*2000);
+}
+
+geo.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+
+const mat=new THREE.PointsMaterial({
+size:2.2,
+color:0xff6fa8,
+transparent:true,
+opacity:0.9,
+blending:THREE.AdditiveBlending,
+depthWrite:false
+});
+
+const stars=new THREE.Points(geo,mat);
+scene.add(stars);
+
+/* mouse effect */
+let mx=0,my=0;
+
+document.addEventListener("mousemove",(e)=>{
+mx=(e.clientX-window.innerWidth/2)*0.0008;
+my=(e.clientY-window.innerHeight/2)*0.0008;
+});
+
+/* animate */
+function animate(){
+requestAnimationFrame(animate);
+
+stars.rotation.y += 0.0007;
+stars.rotation.x += 0.0003;
+
+camera.position.x += (mx*100-camera.position.x)*0.03;
+camera.position.y += (-my*100-camera.position.y)*0.03;
+
+camera.lookAt(scene.position);
+
+renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener("resize",()=>{
+camera.aspect=window.innerWidth/window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+}
+
+/* petals */
+function petal(){
+const p=document.createElement("div");
+p.className="petal";
+p.innerHTML="🌸";
+p.style.left=Math.random()*100+"vw";
+p.style.animationDuration=(Math.random()*5+5)+"s";
+document.body.appendChild(p);
+setTimeout(()=>p.remove(),10000);
+}
+setInterval(petal,250);
+
+</script>
+
+</body>
+</html>
